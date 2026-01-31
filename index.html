@@ -12,17 +12,17 @@
         h1 { color: #2d3436; font-size: 28px; font-weight: 600; }
         
         .alerts { margin-bottom: 20px; }
-        .alert { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.06); }
+        .alert { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.06); }
         .alert.urgent { background: #ffe8e8; }
-        .alert-icon { font-size: 24px; }
+        .alert-icon { font-size: 20px; }
         .alert-content { flex: 1; }
-        .alert-title { font-weight: 600; margin-bottom: 4px; color: #2d3436; }
-        .alert-text { font-size: 14px; color: #636e72; }
+        .alert-title { font-weight: 600; margin-bottom: 2px; color: #2d3436; font-size: 13px; }
+        .alert-text { font-size: 12px; color: #636e72; }
         
         .car-card { background: white; border-radius: 20px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 20px rgba(0,0,0,0.08); position: relative; }
         .car-header { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e8ebed; }
         .car-name { font-size: 22px; font-weight: 600; color: #2d3436; }
-        .car-year, .car-license { color: #b2bec3; font-size: 18px; margin-right: 8px; }
+        .car-year, .car-license { color: #b2bec3; font-size: 16px; margin-right: 8px; }
         
         .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
         .info-item { background: #f8f9fa; padding: 10px; border-radius: 12px; }
@@ -47,8 +47,10 @@
         
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(45, 52, 54, 0.8); z-index: 1000; padding: 20px; overflow-y: auto; }
         .modal.active { display: flex; align-items: center; justify-content: center; }
-        .modal-content { background: white; border-radius: 20px; padding: 28px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .modal-content { background: white; border-radius: 20px; padding: 28px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); position: relative; }
         .modal-header { font-size: 24px; font-weight: 600; color: #2d3436; margin-bottom: 24px; }
+        .modal-close { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 28px; color: #636e72; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { color: #2d3436; }
         .form-group { margin-bottom: 18px; }
         .form-label { display: block; font-weight: 600; margin-bottom: 8px; color: #2d3436; font-size: 14px; }
         .form-input { width: 100%; padding: 12px; border: 2px solid #e8ebed; border-radius: 12px; font-size: 16px; direction: rtl; }
@@ -79,6 +81,7 @@
 
     <div class="modal" id="editModal" onclick="closeModalOnOutside(event)">
         <div class="modal-content">
+            <button class="modal-close" onclick="closeEditModal()">✕</button>
             <div class="modal-header">ערוך פרטי רכב</div>
             <form id="editForm" onsubmit="saveEdit(event)">
                 <div class="form-group">
