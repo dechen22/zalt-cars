@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כל הרכבים</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, sans-serif; background: #c8e6e6; padding: 20px; direction: rtl; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { background: white; border-radius: 20px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 20px rgba(0,0,0,0.08); text-align: center; }
+        h1 { color: #2d3436; font-size: 28px; font-weight: 600; }
+        .car-card { background: white; border-radius: 20px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 20px rgba(0,0,0,0.08); position: relative; }
+        .car-header { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e8ebed; }
+        .car-name { font-size: 22px; font-weight: 600; color: #2d3436; }
+        .car-year, .car-license { color: #b2bec3; font-size: 18px; margin-right: 8px; }
+        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+        .info-item { background: #f8f9fa; padding: 10px; border-radius: 12px; }
+        .info-label { font-size: 11px; color: #2d3436; margin-bottom: 4px; font-weight: 600; }
+        .info-value { font-weight: 500; color: #2d3436; font-size: 14px; }
+        .info-company { font-size: 11px; color: #74b9b9; margin-top: 2px; }
+        .days-until { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; margin-top: 4px; background: #ff7675; color: white; }
+        .days-until.ok { display: none; }
+        .drivers { background: #e8f4f4; padding: 12px; border-radius: 12px; margin-top: 16px; font-size: 14px; color: #2d3436; }
+        .notes { background: #fff4e6; padding: 12px; border-radius: 12px; margin-top: 12px; font-size: 13px; color: #636e72; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>כל הרכבים</h1>
+        </div>
+        <div id="cars"></div>
+    </div>
+
+    <script>
+        var cars = [
+            {
+                name: "טויוטה פריוס", year: "2014", license: "4658830", test: "24/02/26",
+                mandatoryInsurance: { company: "הפניקס", date: "30/09/26" },
+                comprehensiveInsurance: { type: "צד ג'", company: "הפניקס", date: "30/09/26" },
+                drivers: "ויטור ושרה", notes: "להוסיף כל נהג, לשנות שם שרה"
+            },
+            {
+                name: "סקודה", year: "2018", license: "37354601", test: "18/02/26",
+                mandatoryInsurance: { company: "ביטוח ישיר", date: "30/11/26" },
+                comprehensiveInsurance: { type: "מקיף", company: "ביטוח ישיר", date: "30/11/26" },
+                drivers: "כל נהג מגיל 30 שנים", notes: ""
+            },
+            {
+                name: "פורד פוקוס", year: "2007", license: "4251962", test: "28/01/27",
+                mandatoryInsurance: { company: "ביטוח ישיר", date: "30/04/26" },
+                comprehensiveInsurance: { type: "צד ג'", company: "ביטוח ישיר", date: "30/04/26" },
+                drivers: "אסתר וגילי", notes: "חסר עותק רישיון"
+            },
+            {
+                name: "מזדה 2", year: "2009", license: "9797165", test: "10/05/26",
+                mandatoryInsurance: { company: "הפול", date: "31/01/26" },
+                comprehensiveInsurance: { type: "צד ג'", company: "שומרה", date: "31/10/26" },
+                drivers: "כולם מעל גיל 46", notes: "לחדש ביטוח חובה - לשאול את לריסה"
+            }
+        ];
+
+        function parseDate(dateStr) {
+            var parts = dateStr.split('/');
+            return new Date(2000 + parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        }
+
+        function getDaysUntil(dateStr) {
+            var targetDate = parseDate(dateStr);
+            var today = new Date();
+            var diffTime = targetDate - today;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        function getDaysText(days) {
+            if (days < 0) return "פג לפני " + Math.abs(days) + " ימים!";
+            if (days === 0) return "פג היום!";
+            if (days === 1) return "פג מחר!";
+            return "עוד " + days + " ימים";
+        }
+
+        function getDaysClass(days) {
+            return (days <= 45) ? "warning" : "ok";
+        }
+
+        var html = "";
+        for (var i = 0; i < cars.length; i++) {
+            var car = cars[i];
+            var testDays = getDaysUntil(car.test);
+            var mandatoryDays = getDaysUntil(car.mandatoryInsurance.date);
+            var compDays = getDaysUntil(car.comprehensiveInsurance.date);
+
+            html += '<div class="car-card">';
+            html += '<div class="car-header">';
+            html += '<div class="car-name">' + car.name + ' <span class="car-year">' + car.year + '</span> <span class="car-license">' + car.license + '</span></div>';
+            html += '</div>';
+            
+            html += '<div class="info-grid">';
+            html += '<div class="info-item">';
+            html += '<div class="info-label">טסט</div>';
+            html += '<div class="info-value">' + car.test + '</div>';
+            html += '<span class="days-until ' + getDaysClass(testDays) + '">' + getDaysText(testDays) + '</span>';
+            html += '</div>';
+            
+            html += '<div class="info-item">';
+            html += '<div class="info-label">ביטוח חובה</div>';
+            html += '<div class="info-value">' + car.mandatoryInsurance.date + '</div>';
+            html += '<div class="info-company">' + car.mandatoryInsurance.company + '</div>';
+            html += '<span class="days-until ' + getDaysClass(mandatoryDays) + '">' + getDaysText(mandatoryDays) + '</span>';
+            html += '</div>';
+            
+            html += '<div class="info-item">';
+            html += '<div class="info-label">' + car.comprehensiveInsurance.type + '</div>';
+            html += '<div class="info-value">' + car.comprehensiveInsurance.date + '</div>';
+            html += '<div class="info-company">' + car.comprehensiveInsurance.company + '</div>';
+            html += '<span class="days-until ' + getDaysClass(compDays) + '">' + getDaysText(compDays) + '</span>';
+            html += '</div>';
+            html += '</div>';
+            
+            html += '<div class="drivers"><strong>👥 נהגים מורשים:</strong> ' + car.drivers + '</div>';
+            if (car.notes) {
+                html += '<div class="notes">📝 ' + car.notes + '</div>';
+            }
+            html += '</div>';
+        }
+
+        document.getElementById('cars').innerHTML = html;
+    </script>
+</body>
+</html>
