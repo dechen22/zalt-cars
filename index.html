@@ -94,16 +94,16 @@
                     <input type="text" class="form-input" id="edit-license" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">טסט עד (DD/MM/YY)</label>
-                    <input type="text" class="form-input" id="edit-test" placeholder="24/02/26" required>
+                    <label class="form-label">טסט עד</label>
+                    <input type="date" class="form-input" id="edit-test" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">ביטוח חובה - חברה</label>
                     <input type="text" class="form-input" id="edit-mandatory-company" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">ביטוח חובה - תאריך (DD/MM/YY)</label>
-                    <input type="text" class="form-input" id="edit-mandatory-date" placeholder="30/09/26" required>
+                    <label class="form-label">ביטוח חובה - תאריך</label>
+                    <input type="date" class="form-input" id="edit-mandatory-date" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">סוג ביטוח (מקיף / צד ג')</label>
@@ -114,8 +114,8 @@
                     <input type="text" class="form-input" id="edit-comp-company" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">ביטוח מקיף/צד ג' - תאריך (DD/MM/YY)</label>
-                    <input type="text" class="form-input" id="edit-comp-date" placeholder="30/09/26" required>
+                    <label class="form-label">ביטוח מקיף/צד ג' - תאריך</label>
+                    <input type="date" class="form-input" id="edit-comp-date" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">נהגים מורשים</label>
@@ -202,6 +202,24 @@
 
         function getDaysClass(days) {
             return (days <= 45) ? "warning" : "ok";
+        }
+
+        // Convert DD/MM/YY to YYYY-MM-DD for date input
+        function toDateInput(dateStr) {
+            var parts = dateStr.split('/');
+            var day = parts[0];
+            var month = parts[1];
+            var year = '20' + parts[2];
+            return year + '-' + month + '-' + day;
+        }
+
+        // Convert YYYY-MM-DD to DD/MM/YY for display
+        function toDisplayDate(dateStr) {
+            var parts = dateStr.split('-');
+            var year = parts[0].substring(2);
+            var month = parts[1];
+            var day = parts[2];
+            return day + '/' + month + '/' + year;
         }
 
         function renderAlerts() {
@@ -315,12 +333,12 @@
             document.getElementById('edit-name').value = car.name;
             document.getElementById('edit-year').value = car.year;
             document.getElementById('edit-license').value = car.license;
-            document.getElementById('edit-test').value = car.test;
+            document.getElementById('edit-test').value = toDateInput(car.test);
             document.getElementById('edit-mandatory-company').value = car.mandatoryInsurance.company;
-            document.getElementById('edit-mandatory-date').value = car.mandatoryInsurance.date;
+            document.getElementById('edit-mandatory-date').value = toDateInput(car.mandatoryInsurance.date);
             document.getElementById('edit-comp-type').value = car.comprehensiveInsurance.type;
             document.getElementById('edit-comp-company').value = car.comprehensiveInsurance.company;
-            document.getElementById('edit-comp-date').value = car.comprehensiveInsurance.date;
+            document.getElementById('edit-comp-date').value = toDateInput(car.comprehensiveInsurance.date);
             document.getElementById('edit-drivers').value = car.drivers;
             document.getElementById('edit-notes').value = car.notes;
             
@@ -347,15 +365,15 @@
                 name: document.getElementById('edit-name').value,
                 year: document.getElementById('edit-year').value,
                 license: document.getElementById('edit-license').value,
-                test: document.getElementById('edit-test').value,
+                test: toDisplayDate(document.getElementById('edit-test').value),
                 mandatoryInsurance: {
                     company: document.getElementById('edit-mandatory-company').value,
-                    date: document.getElementById('edit-mandatory-date').value
+                    date: toDisplayDate(document.getElementById('edit-mandatory-date').value)
                 },
                 comprehensiveInsurance: {
                     type: document.getElementById('edit-comp-type').value,
                     company: document.getElementById('edit-comp-company').value,
-                    date: document.getElementById('edit-comp-date').value
+                    date: toDisplayDate(document.getElementById('edit-comp-date').value)
                 },
                 drivers: document.getElementById('edit-drivers').value,
                 notes: document.getElementById('edit-notes').value
