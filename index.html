@@ -11,6 +11,11 @@
         .header { background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 20px rgba(0,0,0,0.08); text-align: center; }
         h1 { color: #2d3436; font-size: 22px; font-weight: 600; }
         
+        .sync-status { text-align: center; padding: 8px; margin-bottom: 12px; border-radius: 12px; font-size: 13px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .sync-status.loading { color: #74b9b9; }
+        .sync-status.success { color: #00b894; }
+        .sync-status.error { color: #ff7675; }
+        
         .alerts { margin-bottom: 20px; }
         .alert { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.06); }
         .alert.urgent { background: #ffe8e8; }
@@ -67,6 +72,8 @@
         <div class="header">
             <h1>כל הרכבים</h1>
         </div>
+        
+        <div id="syncStatus" class="sync-status loading">טוען נתונים...</div>
         
         <div id="alerts" class="alerts"></div>
         <div id="cars"></div>
@@ -137,51 +144,104 @@
     </div>
 
     <script>
-        var cars = [
-            {
-                name: "טויוטה פריוס", year: "2014", license: "4658830", test: "24/02/26",
-                mandatoryInsurance: { company: "הפניקס", date: "30/09/26" },
-                comprehensiveInsurance: { type: "צד ג'", company: "הפניקס", date: "30/09/26" },
-                drivers: "ויטור ושרה", notes: "להוסיף כל נהג, לשנות שם שרה"
-            },
-            {
-                name: "סקודה", year: "2018", license: "37354601", test: "18/02/26",
-                mandatoryInsurance: { company: "ביטוח ישיר", date: "30/11/26" },
-                comprehensiveInsurance: { type: "מקיף", company: "ביטוח ישיר", date: "30/11/26" },
-                drivers: "כל נהג מגיל 30 שנים", notes: ""
-            },
-            {
-                name: "פורד פוקוס", year: "2007", license: "4251962", test: "28/01/27",
-                mandatoryInsurance: { company: "ביטוח ישיר", date: "30/04/26" },
-                comprehensiveInsurance: { type: "צד ג'", company: "ביטוח ישיר", date: "30/04/26" },
-                drivers: "אסתר וגילי", notes: "חסר עותק רישיון"
-            },
-            {
-                name: "מזדה 2", year: "2009", license: "9797165", test: "10/05/26",
-                mandatoryInsurance: { company: "הפול", date: "31/01/26" },
-                comprehensiveInsurance: { type: "צד ג'", company: "שומרה", date: "31/10/26" },
-                drivers: "כולם מעל גיל 46", notes: "לחדש ביטוח חובה - לשאול את לריסה"
-            }
-        ];
-
+        var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrxsniFDITDNaBXX4ooe_BvLSZnCqs7tTDwwTunWKCcn9QTkpU3HJIa_TcxSOhlMoI/exec';
+        var cars = [];
         var currentEditIndex = -1;
 
-        // Try to load from localStorage
-        try {
-            var savedCars = localStorage.getItem('cars');
-            if (savedCars) {
-                cars = JSON.parse(savedCars);
-            }
-        } catch (e) {
-            console.log('localStorage not available');
+        function showSyncStatus(message, type) {
+            var statusEl = document.getElementById('syncStatus');
+            statusEl.textContent = message;
+            statusEl.className = 'sync-status ' + type;
         }
 
-        function saveCars() {
-            try {
-                localStorage.setItem('cars', JSON.stringify(cars));
-            } catch (e) {
-                console.log('Cannot save to localStorage');
-            }
+        function loadFromGoogleSheet() {
+            showSyncStatus('טוען נתונים מגוגל...', 'loading');
+            
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'GET',
+                redirect: 'follow'
+            })
+                .then(function(response) { 
+                    if (!response.ok) {
+                        throw new Error('HTTP error! status: ' + response.status);
+                    }
+                    return response.json(); 
+                })
+                .then(function(data) {
+                    if (data && data.cars) {
+                        cars = data.cars;
+                        showSyncStatus('✓ הנתונים עודכנו', 'success');
+                        setTimeout(function() {
+                            document.getElementById('syncStatus').style.display = 'none';
+                        }, 2000);
+                        renderAlerts();
+                        renderCars();
+                    } else {
+                        throw new Error('Invalid data format');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error loading data:', error);
+                    showSyncStatus('שגיאה: ' + error.message, 'error');
+                    // Use fallback data if load fails
+                    if (cars.length === 0) {
+                        cars = [
+                            {
+                                name: "טויוטה פריוס", year: "2014", license: "4658830", test: "24/02/26",
+                                mandatoryInsurance: { company: "הפניקס", date: "30/09/26" },
+                                comprehensiveInsurance: { type: "צד ג'", company: "הפניקס", date: "30/09/26" },
+                                drivers: "ויטור ושרה", notes: "להוסיף כל נהג, לשנות שם שרה"
+                            },
+                            {
+                                name: "סקודה", year: "2018", license: "37354601", test: "18/02/26",
+                                mandatoryInsurance: { company: "ביטוח ישיר", date: "30/11/26" },
+                                comprehensiveInsurance: { type: "מקיף", company: "ביטוח ישיר", date: "30/11/26" },
+                                drivers: "כל נהג מגיל 30 שנים", notes: ""
+                            },
+                            {
+                                name: "פורד פוקוס", year: "2007", license: "4251962", test: "28/01/27",
+                                mandatoryInsurance: { company: "ביטוח ישיר", date: "30/04/26" },
+                                comprehensiveInsurance: { type: "צד ג'", company: "ביטוח ישיר", date: "30/04/26" },
+                                drivers: "אסתר וגילי", notes: "חסר עותק רישיון"
+                            },
+                            {
+                                name: "מזדה 2", year: "2009", license: "9797165", test: "10/05/26",
+                                mandatoryInsurance: { company: "הפול", date: "31/01/26" },
+                                comprehensiveInsurance: { type: "צד ג'", company: "שומרה", date: "31/10/26" },
+                                drivers: "כולם מעל גיל 46", notes: "לחדש ביטוח חובה - לשאול את לריסה"
+                            }
+                        ];
+                        renderAlerts();
+                        renderCars();
+                        showSyncStatus('משתמש בנתונים שמורים', 'error');
+                    }
+                });
+        }
+
+        function saveToGoogleSheet() {
+            showSyncStatus('שומר שינויים...', 'loading');
+            
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                redirect: 'follow',
+                body: JSON.stringify({ cars: cars })
+            })
+                .then(function(response) { 
+                    if (!response.ok) {
+                        throw new Error('HTTP error! status: ' + response.status);
+                    }
+                    return response.json(); 
+                })
+                .then(function(data) {
+                    showSyncStatus('✓ השינויים נשמרו', 'success');
+                    setTimeout(function() {
+                        document.getElementById('syncStatus').style.display = 'none';
+                    }, 2000);
+                })
+                .catch(function(error) {
+                    console.error('Error saving data:', error);
+                    showSyncStatus('שגיאה: ' + error.message, 'error');
+                });
         }
 
         function parseDate(dateStr) {
@@ -207,7 +267,6 @@
             return (days <= 45) ? "warning" : "ok";
         }
 
-        // Convert DD/MM/YY to YYYY-MM-DD for date input
         function toDateInput(dateStr) {
             var parts = dateStr.split('/');
             var day = parts[0];
@@ -216,7 +275,6 @@
             return year + '-' + month + '-' + day;
         }
 
-        // Convert YYYY-MM-DD to DD/MM/YY for display
         function toDisplayDate(dateStr) {
             var parts = dateStr.split('-');
             var year = parts[0].substring(2);
@@ -382,7 +440,7 @@
                 notes: document.getElementById('edit-notes').value
             };
             
-            saveCars();
+            saveToGoogleSheet();
             renderAlerts();
             renderCars();
             closeEditModal();
@@ -449,17 +507,18 @@
             }
         }
 
-        // Check if notifications are already enabled
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
             document.getElementById('enableNotifications').disabled = true;
             document.getElementById('notificationStatus').innerHTML = '<span class="enabled">✓ התראות מופעלות</span>';
         }
 
-        // Initial render
-        renderAlerts();
-        renderCars();
+        // Load data on page load
+        loadFromGoogleSheet();
 
-        // Update daily
+        // Refresh from Google Sheets every 5 minutes
+        setInterval(loadFromGoogleSheet, 5 * 60 * 1000);
+
+        // Update daily for notifications
         setInterval(function() {
             renderAlerts();
             renderCars();
