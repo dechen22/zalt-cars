@@ -213,6 +213,12 @@
                 })
                 .then(function(data) {
                     if (data && data.cars) {
+                        // Clean dates before using
+                        for (var i = 0; i < data.cars.length; i++) {
+                            data.cars[i].test = cleanDate(data.cars[i].test);
+                            data.cars[i].mandatoryInsurance.date = cleanDate(data.cars[i].mandatoryInsurance.date);
+                            data.cars[i].comprehensiveInsurance.date = cleanDate(data.cars[i].comprehensiveInsurance.date);
+                        }
                         cars = data.cars;
                         showSyncStatus('✓ הנתונים עודכנו', 'success');
                         setTimeout(function() {
@@ -309,6 +315,31 @@
 
         function getDaysClass(days) {
             return (days <= 45) ? "warning" : "ok";
+        }
+
+        // Clean date - handle both DD/MM/YY format and corrupted date strings
+        function cleanDate(dateValue) {
+            if (!dateValue) return '';
+            
+            // If it's already in DD/MM/YY format, return it
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{2}\/\d{2}\/\d{2}$/)) {
+                return dateValue;
+            }
+            
+            // If it's a date string like "Tue Feb 24 2026..."
+            if (typeof dateValue === 'string' && dateValue.includes('GMT')) {
+                try {
+                    var date = new Date(dateValue);
+                    var day = ("0" + date.getDate()).slice(-2);
+                    var month = ("0" + (date.getMonth() + 1)).slice(-2);
+                    var year = String(date.getFullYear()).slice(-2);
+                    return day + '/' + month + '/' + year;
+                } catch (e) {
+                    return '';
+                }
+            }
+            
+            return String(dateValue);
         }
 
         function toDateInput(dateStr) {
