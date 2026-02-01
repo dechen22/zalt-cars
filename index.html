@@ -34,6 +34,9 @@
         .info-label { font-size: 11px; color: #2d3436; margin-bottom: 4px; font-weight: 600; }
         .info-value { font-weight: 500; color: #2d3436; font-size: 14px; }
         .info-company { font-size: 11px; color: #74b9b9; margin-top: 2px; }
+        
+        .doc-link { display: inline-block; margin-top: 4px; padding: 4px 8px; background: #74b9b9; color: white; text-decoration: none; border-radius: 6px; font-size: 10px; font-weight: 600; }
+        .doc-link:hover { background: #5fa3a3; }
         .days-until { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; margin-top: 4px; background: #ff7675; color: white; }
         .days-until.ok { display: none; }
         
@@ -129,12 +132,20 @@
                     <input type="date" class="form-input" id="edit-test" required>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">טסט - קישור למסמך</label>
+                    <input type="url" class="form-input" id="edit-test-doc" placeholder="https://drive.google.com/...">
+                </div>
+                <div class="form-group">
                     <label class="form-label">ביטוח חובה - חברה</label>
                     <input type="text" class="form-input" id="edit-mandatory-company" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">ביטוח חובה - תאריך</label>
                     <input type="date" class="form-input" id="edit-mandatory-date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ביטוח חובה - קישור למסמך</label>
+                    <input type="url" class="form-input" id="edit-mandatory-doc" placeholder="https://drive.google.com/...">
                 </div>
                 <div class="form-group">
                     <label class="form-label">סוג ביטוח (מקיף / צד ג')</label>
@@ -147,6 +158,10 @@
                 <div class="form-group">
                     <label class="form-label">ביטוח מקיף/צד ג' - תאריך</label>
                     <input type="date" class="form-input" id="edit-comp-date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ביטוח מקיף/צד ג' - קישור למסמך</label>
+                    <input type="url" class="form-input" id="edit-comp-doc" placeholder="https://drive.google.com/...">
                 </div>
                 <div class="form-group">
                     <label class="form-label">נהגים מורשים</label>
@@ -381,6 +396,9 @@
                 html += '<div class="info-label">טסט</div>';
                 html += '<div class="info-value">' + car.test + '</div>';
                 html += '<span class="days-until ' + getDaysClass(testDays) + '">' + getDaysText(testDays) + '</span>';
+                if (car.testDocument) {
+                    html += '<br><a href="' + car.testDocument + '" target="_blank" class="doc-link">📄 מסמך</a>';
+                }
                 html += '</div>';
                 
                 html += '<div class="info-item">';
@@ -388,6 +406,9 @@
                 html += '<div class="info-value">' + car.mandatoryInsurance.date + '</div>';
                 html += '<div class="info-company">' + car.mandatoryInsurance.company + '</div>';
                 html += '<span class="days-until ' + getDaysClass(mandatoryDays) + '">' + getDaysText(mandatoryDays) + '</span>';
+                if (car.mandatoryInsurance.document) {
+                    html += '<br><a href="' + car.mandatoryInsurance.document + '" target="_blank" class="doc-link">📄 מסמך</a>';
+                }
                 html += '</div>';
                 
                 html += '<div class="info-item">';
@@ -395,6 +416,9 @@
                 html += '<div class="info-value">' + car.comprehensiveInsurance.date + '</div>';
                 html += '<div class="info-company">' + car.comprehensiveInsurance.company + '</div>';
                 html += '<span class="days-until ' + getDaysClass(compDays) + '">' + getDaysText(compDays) + '</span>';
+                if (car.comprehensiveInsurance.document) {
+                    html += '<br><a href="' + car.comprehensiveInsurance.document + '" target="_blank" class="doc-link">📄 מסמך</a>';
+                }
                 html += '</div>';
                 html += '</div>';
                 
@@ -416,11 +440,14 @@
             document.getElementById('edit-year').value = car.year;
             document.getElementById('edit-license').value = car.license;
             document.getElementById('edit-test').value = toDateInput(car.test);
+            document.getElementById('edit-test-doc').value = car.testDocument || '';
             document.getElementById('edit-mandatory-company').value = car.mandatoryInsurance.company;
             document.getElementById('edit-mandatory-date').value = toDateInput(car.mandatoryInsurance.date);
+            document.getElementById('edit-mandatory-doc').value = car.mandatoryInsurance.document || '';
             document.getElementById('edit-comp-type').value = car.comprehensiveInsurance.type;
             document.getElementById('edit-comp-company').value = car.comprehensiveInsurance.company;
             document.getElementById('edit-comp-date').value = toDateInput(car.comprehensiveInsurance.date);
+            document.getElementById('edit-comp-doc').value = car.comprehensiveInsurance.document || '';
             document.getElementById('edit-drivers').value = car.drivers;
             document.getElementById('edit-notes').value = car.notes;
             
@@ -448,14 +475,17 @@
                 year: document.getElementById('edit-year').value,
                 license: document.getElementById('edit-license').value,
                 test: toDisplayDate(document.getElementById('edit-test').value),
+                testDocument: document.getElementById('edit-test-doc').value,
                 mandatoryInsurance: {
                     company: document.getElementById('edit-mandatory-company').value,
-                    date: toDisplayDate(document.getElementById('edit-mandatory-date').value)
+                    date: toDisplayDate(document.getElementById('edit-mandatory-date').value),
+                    document: document.getElementById('edit-mandatory-doc').value
                 },
                 comprehensiveInsurance: {
                     type: document.getElementById('edit-comp-type').value,
                     company: document.getElementById('edit-comp-company').value,
-                    date: toDisplayDate(document.getElementById('edit-comp-date').value)
+                    date: toDisplayDate(document.getElementById('edit-comp-date').value),
+                    document: document.getElementById('edit-comp-doc').value
                 },
                 drivers: document.getElementById('edit-drivers').value,
                 notes: document.getElementById('edit-notes').value
