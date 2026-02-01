@@ -436,7 +436,7 @@
                 html += '<div class="info-grid">';
                 html += '<div class="info-item">';
                 if (car.testDocument) {
-                    html += '<div class="info-label"><a href="' + car.testDocument + '" target="_blank" style="color: #74b9b9; text-decoration: underline;">טסט 📄</a></div>';
+                    html += '<div class="info-label"><a href="#" onclick="openDocument(\'' + car.testDocument + '\'); return false;" style="color: #74b9b9; text-decoration: underline;">טסט</a></div>';
                 } else {
                     html += '<div class="info-label">טסט</div>';
                 }
@@ -446,7 +446,7 @@
                 
                 html += '<div class="info-item">';
                 if (car.mandatoryInsurance.document) {
-                    html += '<div class="info-label"><a href="' + car.mandatoryInsurance.document + '" target="_blank" style="color: #74b9b9; text-decoration: underline;">ביטוח חובה 📄</a></div>';
+                    html += '<div class="info-label"><a href="#" onclick="openDocument(\'' + car.mandatoryInsurance.document + '\'); return false;" style="color: #74b9b9; text-decoration: underline;">ביטוח חובה</a></div>';
                 } else {
                     html += '<div class="info-label">ביטוח חובה</div>';
                 }
@@ -457,7 +457,7 @@
                 
                 html += '<div class="info-item">';
                 if (car.comprehensiveInsurance.document) {
-                    html += '<div class="info-label"><a href="' + car.comprehensiveInsurance.document + '" target="_blank" style="color: #74b9b9; text-decoration: underline;">' + car.comprehensiveInsurance.type + ' 📄</a></div>';
+                    html += '<div class="info-label"><a href="#" onclick="openDocument(\'' + car.comprehensiveInsurance.document + '\'); return false;" style="color: #74b9b9; text-decoration: underline;">' + car.comprehensiveInsurance.type + '</a></div>';
                 } else {
                     html += '<div class="info-label">' + car.comprehensiveInsurance.type + '</div>';
                 }
@@ -624,6 +624,30 @@
                 callback(e.target.result);
             };
             reader.readAsDataURL(file);
+        }
+        
+        function openDocument(base64Data) {
+            if (!base64Data) return;
+            
+            // Open in new window
+            var newWindow = window.open();
+            if (!newWindow) {
+                alert('אנא אפשר חלונות קופצים כדי לצפות במסמך');
+                return;
+            }
+            
+            // For images, display directly
+            if (base64Data.startsWith('data:image')) {
+                newWindow.document.write('<html><body style="margin:0;"><img src="' + base64Data + '" style="max-width:100%; height:auto;"></body></html>');
+            }
+            // For PDFs, embed
+            else if (base64Data.startsWith('data:application/pdf')) {
+                newWindow.document.write('<html><body style="margin:0; height:100%;"><embed src="' + base64Data + '" type="application/pdf" width="100%" height="100%"></body></html>');
+            }
+            // For other types, try to display
+            else {
+                newWindow.location.href = base64Data;
+            }
         }
 
         function enableNotifications() {
