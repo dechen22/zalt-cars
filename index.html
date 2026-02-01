@@ -312,7 +312,9 @@
         }
 
         function toDateInput(dateStr) {
+            if (!dateStr || typeof dateStr !== 'string') return '';
             var parts = dateStr.split('/');
+            if (parts.length !== 3) return '';
             var day = parts[0];
             var month = parts[1];
             var year = '20' + parts[2];
@@ -320,6 +322,7 @@
         }
 
         function toDisplayDate(dateStr) {
+            if (!dateStr) return '';
             var parts = dateStr.split('-');
             var year = parts[0].substring(2);
             var month = parts[1];
