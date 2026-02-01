@@ -37,6 +37,11 @@
         
         .doc-link { display: inline-block; margin-top: 4px; padding: 4px 8px; background: #74b9b9; color: white; text-decoration: none; border-radius: 6px; font-size: 10px; font-weight: 600; }
         .doc-link:hover { background: #5fa3a3; }
+        
+        .file-preview { margin-top: 8px; padding: 8px; background: #f8f9fa; border-radius: 8px; font-size: 12px; }
+        .file-preview img { max-width: 100%; max-height: 150px; border-radius: 4px; margin-top: 4px; }
+        .remove-file { color: #ff7675; cursor: pointer; font-size: 11px; margin-right: 8px; }
+        .remove-file:hover { text-decoration: underline; }
         .days-until { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; margin-top: 4px; background: #ff7675; color: white; }
         .days-until.ok { display: none; }
         
@@ -132,8 +137,9 @@
                     <input type="date" class="form-input" id="edit-test" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">טסט - קישור למסמך</label>
-                    <input type="url" class="form-input" id="edit-test-doc" placeholder="https://drive.google.com/...">
+                    <label class="form-label">טסט - מסמך</label>
+                    <input type="file" class="form-input" id="edit-test-doc" accept="image/*,.pdf">
+                    <div id="test-doc-preview"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">ביטוח חובה - חברה</label>
@@ -144,8 +150,9 @@
                     <input type="date" class="form-input" id="edit-mandatory-date" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">ביטוח חובה - קישור למסמך</label>
-                    <input type="url" class="form-input" id="edit-mandatory-doc" placeholder="https://drive.google.com/...">
+                    <label class="form-label">ביטוח חובה - מסמך</label>
+                    <input type="file" class="form-input" id="edit-mandatory-doc" accept="image/*,.pdf">
+                    <div id="mandatory-doc-preview"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">סוג ביטוח (מקיף / צד ג')</label>
@@ -160,8 +167,9 @@
                     <input type="date" class="form-input" id="edit-comp-date" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">ביטוח מקיף/צד ג' - קישור למסמך</label>
-                    <input type="url" class="form-input" id="edit-comp-doc" placeholder="https://drive.google.com/...">
+                    <label class="form-label">ביטוח מקיף/צד ג' - מסמך</label>
+                    <input type="file" class="form-input" id="edit-comp-doc" accept="image/*,.pdf">
+                    <div id="comp-doc-preview"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">נהגים מורשים</label>
@@ -393,32 +401,35 @@
                 
                 html += '<div class="info-grid">';
                 html += '<div class="info-item">';
-                html += '<div class="info-label">טסט</div>';
+                if (car.testDocument) {
+                    html += '<div class="info-label"><a href="' + car.testDocument + '" target="_blank" style="color: #74b9b9; text-decoration: underline;">טסט 📄</a></div>';
+                } else {
+                    html += '<div class="info-label">טסט</div>';
+                }
                 html += '<div class="info-value">' + car.test + '</div>';
                 html += '<span class="days-until ' + getDaysClass(testDays) + '">' + getDaysText(testDays) + '</span>';
-                if (car.testDocument) {
-                    html += '<br><a href="' + car.testDocument + '" target="_blank" class="doc-link">📄 מסמך</a>';
-                }
                 html += '</div>';
                 
                 html += '<div class="info-item">';
-                html += '<div class="info-label">ביטוח חובה</div>';
+                if (car.mandatoryInsurance.document) {
+                    html += '<div class="info-label"><a href="' + car.mandatoryInsurance.document + '" target="_blank" style="color: #74b9b9; text-decoration: underline;">ביטוח חובה 📄</a></div>';
+                } else {
+                    html += '<div class="info-label">ביטוח חובה</div>';
+                }
                 html += '<div class="info-value">' + car.mandatoryInsurance.date + '</div>';
                 html += '<div class="info-company">' + car.mandatoryInsurance.company + '</div>';
                 html += '<span class="days-until ' + getDaysClass(mandatoryDays) + '">' + getDaysText(mandatoryDays) + '</span>';
-                if (car.mandatoryInsurance.document) {
-                    html += '<br><a href="' + car.mandatoryInsurance.document + '" target="_blank" class="doc-link">📄 מסמך</a>';
-                }
                 html += '</div>';
                 
                 html += '<div class="info-item">';
-                html += '<div class="info-label">' + car.comprehensiveInsurance.type + '</div>';
+                if (car.comprehensiveInsurance.document) {
+                    html += '<div class="info-label"><a href="' + car.comprehensiveInsurance.document + '" target="_blank" style="color: #74b9b9; text-decoration: underline;">' + car.comprehensiveInsurance.type + ' 📄</a></div>';
+                } else {
+                    html += '<div class="info-label">' + car.comprehensiveInsurance.type + '</div>';
+                }
                 html += '<div class="info-value">' + car.comprehensiveInsurance.date + '</div>';
                 html += '<div class="info-company">' + car.comprehensiveInsurance.company + '</div>';
                 html += '<span class="days-until ' + getDaysClass(compDays) + '">' + getDaysText(compDays) + '</span>';
-                if (car.comprehensiveInsurance.document) {
-                    html += '<br><a href="' + car.comprehensiveInsurance.document + '" target="_blank" class="doc-link">📄 מסמך</a>';
-                }
                 html += '</div>';
                 html += '</div>';
                 
@@ -440,18 +451,48 @@
             document.getElementById('edit-year').value = car.year;
             document.getElementById('edit-license').value = car.license;
             document.getElementById('edit-test').value = toDateInput(car.test);
-            document.getElementById('edit-test-doc').value = car.testDocument || '';
             document.getElementById('edit-mandatory-company').value = car.mandatoryInsurance.company;
             document.getElementById('edit-mandatory-date').value = toDateInput(car.mandatoryInsurance.date);
-            document.getElementById('edit-mandatory-doc').value = car.mandatoryInsurance.document || '';
             document.getElementById('edit-comp-type').value = car.comprehensiveInsurance.type;
             document.getElementById('edit-comp-company').value = car.comprehensiveInsurance.company;
             document.getElementById('edit-comp-date').value = toDateInput(car.comprehensiveInsurance.date);
-            document.getElementById('edit-comp-doc').value = car.comprehensiveInsurance.document || '';
             document.getElementById('edit-drivers').value = car.drivers;
             document.getElementById('edit-notes').value = car.notes;
             
+            // Clear file inputs
+            document.getElementById('edit-test-doc').value = '';
+            document.getElementById('edit-mandatory-doc').value = '';
+            document.getElementById('edit-comp-doc').value = '';
+            
+            // Show existing files
+            showExistingFile('test-doc-preview', car.testDocument);
+            showExistingFile('mandatory-doc-preview', car.mandatoryInsurance.document);
+            showExistingFile('comp-doc-preview', car.comprehensiveInsurance.document);
+            
             document.getElementById('editModal').classList.add('active');
+        }
+        
+        function showExistingFile(previewId, fileData) {
+            var preview = document.getElementById(previewId);
+            if (fileData) {
+                var html = '<div class="file-preview">';
+                html += '<span class="remove-file" onclick="removeExistingFile(\'' + previewId + '\')">✖️ הסר</span>';
+                html += '<strong>מסמך קיים</strong>';
+                if (fileData.match(/^data:image/)) {
+                    html += '<br><img src="' + fileData + '" alt="מסמך">';
+                } else {
+                    html += '<br>📄 PDF';
+                }
+                html += '</div>';
+                preview.innerHTML = html;
+            } else {
+                preview.innerHTML = '';
+            }
+        }
+        
+        function removeExistingFile(previewId) {
+            document.getElementById(previewId).innerHTML = '';
+            document.getElementById(previewId).dataset.removed = 'true';
         }
 
         function closeEditModal() {
@@ -470,31 +511,85 @@
             
             if (currentEditIndex === -1) return;
             
-            cars[currentEditIndex] = {
-                name: document.getElementById('edit-name').value,
-                year: document.getElementById('edit-year').value,
-                license: document.getElementById('edit-license').value,
-                test: toDisplayDate(document.getElementById('edit-test').value),
-                testDocument: document.getElementById('edit-test-doc').value,
-                mandatoryInsurance: {
-                    company: document.getElementById('edit-mandatory-company').value,
-                    date: toDisplayDate(document.getElementById('edit-mandatory-date').value),
-                    document: document.getElementById('edit-mandatory-doc').value
-                },
-                comprehensiveInsurance: {
-                    type: document.getElementById('edit-comp-type').value,
-                    company: document.getElementById('edit-comp-company').value,
-                    date: toDisplayDate(document.getElementById('edit-comp-date').value),
-                    document: document.getElementById('edit-comp-doc').value
-                },
-                drivers: document.getElementById('edit-drivers').value,
-                notes: document.getElementById('edit-notes').value
-            };
+            var car = cars[currentEditIndex];
             
-            saveToGoogleSheet();
-            renderAlerts();
-            renderCars();
-            closeEditModal();
+            // Handle file uploads
+            var testFile = document.getElementById('edit-test-doc').files[0];
+            var mandatoryFile = document.getElementById('edit-mandatory-doc').files[0];
+            var compFile = document.getElementById('edit-comp-doc').files[0];
+            
+            var filesToProcess = 0;
+            var filesProcessed = 0;
+            
+            if (testFile) filesToProcess++;
+            if (mandatoryFile) filesToProcess++;
+            if (compFile) filesToProcess++;
+            
+            if (filesToProcess === 0) {
+                saveCarData();
+            } else {
+                if (testFile) {
+                    readFileAsBase64(testFile, function(base64) {
+                        car.testDocument = base64;
+                        filesProcessed++;
+                        if (filesProcessed === filesToProcess) saveCarData();
+                    });
+                }
+                if (mandatoryFile) {
+                    readFileAsBase64(mandatoryFile, function(base64) {
+                        car.mandatoryInsurance.document = base64;
+                        filesProcessed++;
+                        if (filesProcessed === filesToProcess) saveCarData();
+                    });
+                }
+                if (compFile) {
+                    readFileAsBase64(compFile, function(base64) {
+                        car.comprehensiveInsurance.document = base64;
+                        filesProcessed++;
+                        if (filesProcessed === filesToProcess) saveCarData();
+                    });
+                }
+            }
+            
+            function saveCarData() {
+                // Check if files were removed
+                if (document.getElementById('test-doc-preview').dataset.removed === 'true') {
+                    car.testDocument = null;
+                }
+                if (document.getElementById('mandatory-doc-preview').dataset.removed === 'true') {
+                    car.mandatoryInsurance.document = null;
+                }
+                if (document.getElementById('comp-doc-preview').dataset.removed === 'true') {
+                    car.comprehensiveInsurance.document = null;
+                }
+                
+                car.name = document.getElementById('edit-name').value;
+                car.year = document.getElementById('edit-year').value;
+                car.license = document.getElementById('edit-license').value;
+                car.test = toDisplayDate(document.getElementById('edit-test').value);
+                car.mandatoryInsurance.company = document.getElementById('edit-mandatory-company').value;
+                car.mandatoryInsurance.date = toDisplayDate(document.getElementById('edit-mandatory-date').value);
+                car.comprehensiveInsurance.type = document.getElementById('edit-comp-type').value;
+                car.comprehensiveInsurance.company = document.getElementById('edit-comp-company').value;
+                car.comprehensiveInsurance.date = toDisplayDate(document.getElementById('edit-comp-date').value);
+                car.drivers = document.getElementById('edit-drivers').value;
+                car.notes = document.getElementById('edit-notes').value;
+                
+                cars[currentEditIndex] = car;
+                
+                saveToGoogleSheet();
+                renderAlerts();
+                renderCars();
+                closeEditModal();
+            }
+        }
+        
+        function readFileAsBase64(file, callback) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                callback(e.target.result);
+            };
+            reader.readAsDataURL(file);
         }
 
         function enableNotifications() {
