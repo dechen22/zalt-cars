@@ -271,18 +271,22 @@
         function saveToGoogleSheet() {
             showSyncStatus('שומר שינויים...', 'loading');
             
+            console.log('Saving cars:', cars);
+            
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 redirect: 'follow',
                 body: JSON.stringify({ cars: cars })
             })
                 .then(function(response) { 
+                    console.log('Save response status:', response.status);
                     if (!response.ok) {
                         throw new Error('HTTP error! status: ' + response.status);
                     }
                     return response.json(); 
                 })
                 .then(function(data) {
+                    console.log('Save response data:', data);
                     showSyncStatus('✓ השינויים נשמרו', 'success');
                     setTimeout(function() {
                         document.getElementById('syncStatus').style.display = 'none';
@@ -435,8 +439,8 @@
                 
                 html += '<div class="info-grid">';
                 html += '<div class="info-item">';
-                if (car.testDocument) {
-                    html += '<div class="info-label"><a href="#" onclick="openDocument(\'' + car.testDocument + '\'); return false;" style="color: #74b9b9; text-decoration: underline;">טסט</a></div>';
+                if (car.testFileId) {
+                    html += '<div class="info-label"><a href="https://drive.google.com/file/d/' + car.testFileId + '/view" target="_blank" style="color: #74b9b9; text-decoration: underline;">טסט</a></div>';
                 } else {
                     html += '<div class="info-label">טסט</div>';
                 }
@@ -445,8 +449,8 @@
                 html += '</div>';
                 
                 html += '<div class="info-item">';
-                if (car.mandatoryInsurance.document) {
-                    html += '<div class="info-label"><a href="#" onclick="openDocument(\'' + car.mandatoryInsurance.document + '\'); return false;" style="color: #74b9b9; text-decoration: underline;">ביטוח חובה</a></div>';
+                if (car.mandatoryInsurance.fileId) {
+                    html += '<div class="info-label"><a href="https://drive.google.com/file/d/' + car.mandatoryInsurance.fileId + '/view" target="_blank" style="color: #74b9b9; text-decoration: underline;">ביטוח חובה</a></div>';
                 } else {
                     html += '<div class="info-label">ביטוח חובה</div>';
                 }
@@ -456,8 +460,8 @@
                 html += '</div>';
                 
                 html += '<div class="info-item">';
-                if (car.comprehensiveInsurance.document) {
-                    html += '<div class="info-label"><a href="#" onclick="openDocument(\'' + car.comprehensiveInsurance.document + '\'); return false;" style="color: #74b9b9; text-decoration: underline;">' + car.comprehensiveInsurance.type + '</a></div>';
+                if (car.comprehensiveInsurance.fileId) {
+                    html += '<div class="info-label"><a href="https://drive.google.com/file/d/' + car.comprehensiveInsurance.fileId + '/view" target="_blank" style="color: #74b9b9; text-decoration: underline;">' + car.comprehensiveInsurance.type + '</a></div>';
                 } else {
                     html += '<div class="info-label">' + car.comprehensiveInsurance.type + '</div>';
                 }
@@ -499,24 +503,20 @@
             document.getElementById('edit-comp-doc').value = '';
             
             // Show existing files
-            showExistingFile('test-doc-preview', car.testDocument);
-            showExistingFile('mandatory-doc-preview', car.mandatoryInsurance.document);
-            showExistingFile('comp-doc-preview', car.comprehensiveInsurance.document);
+            showExistingFile('test-doc-preview', car.testFileId);
+            showExistingFile('mandatory-doc-preview', car.mandatoryInsurance.fileId);
+            showExistingFile('comp-doc-preview', car.comprehensiveInsurance.fileId);
             
             document.getElementById('editModal').classList.add('active');
         }
         
-        function showExistingFile(previewId, fileData) {
+        function showExistingFile(previewId, fileId) {
             var preview = document.getElementById(previewId);
-            if (fileData) {
+            if (fileId) {
                 var html = '<div class="file-preview">';
                 html += '<span class="remove-file" onclick="removeExistingFile(\'' + previewId + '\')">✖️ הסר</span>';
                 html += '<strong>מסמך קיים</strong>';
-                if (fileData.match(/^data:image/)) {
-                    html += '<br><img src="' + fileData + '" alt="מסמך">';
-                } else {
-                    html += '<br>📄 PDF';
-                }
+                html += '<br><a href="https://drive.google.com/file/d/' + fileId + '/view" target="_blank">📄 צפה בקובץ</a>';
                 html += '</div>';
                 preview.innerHTML = html;
             } else {
@@ -559,26 +559,42 @@
             if (mandatoryFile) filesToProcess++;
             if (compFile) filesToProcess++;
             
+            // Check if files were removed
+            var testRemoved = document.getElementById('test-doc-preview').dataset.removed === 'true';
+            var mandatoryRemoved = document.getElementById('mandatory-doc-preview').dataset.removed === 'true';
+            var compRemoved = document.getElementById('comp-doc-preview').dataset.removed === 'true';
+            
             if (filesToProcess === 0) {
                 saveCarData();
             } else {
+                showSyncStatus('מעלה קבצים...', 'loading');
+                
                 if (testFile) {
-                    readFileAsBase64(testFile, function(base64) {
-                        car.testDocument = base64;
+                    uploadFileToDrive(testFile, function(fileId) {
+                        if (car.testFileId && car.testFileId !== fileId) {
+                            deleteFileFromDrive(car.testFileId);
+                        }
+                        car.testFileId = fileId;
                         filesProcessed++;
                         if (filesProcessed === filesToProcess) saveCarData();
                     });
                 }
                 if (mandatoryFile) {
-                    readFileAsBase64(mandatoryFile, function(base64) {
-                        car.mandatoryInsurance.document = base64;
+                    uploadFileToDrive(mandatoryFile, function(fileId) {
+                        if (car.mandatoryInsurance.fileId && car.mandatoryInsurance.fileId !== fileId) {
+                            deleteFileFromDrive(car.mandatoryInsurance.fileId);
+                        }
+                        car.mandatoryInsurance.fileId = fileId;
                         filesProcessed++;
                         if (filesProcessed === filesToProcess) saveCarData();
                     });
                 }
                 if (compFile) {
-                    readFileAsBase64(compFile, function(base64) {
-                        car.comprehensiveInsurance.document = base64;
+                    uploadFileToDrive(compFile, function(fileId) {
+                        if (car.comprehensiveInsurance.fileId && car.comprehensiveInsurance.fileId !== fileId) {
+                            deleteFileFromDrive(car.comprehensiveInsurance.fileId);
+                        }
+                        car.comprehensiveInsurance.fileId = fileId;
                         filesProcessed++;
                         if (filesProcessed === filesToProcess) saveCarData();
                     });
@@ -586,15 +602,18 @@
             }
             
             function saveCarData() {
-                // Check if files were removed
-                if (document.getElementById('test-doc-preview').dataset.removed === 'true') {
-                    car.testDocument = null;
+                // Handle removed files
+                if (testRemoved && car.testFileId) {
+                    deleteFileFromDrive(car.testFileId);
+                    car.testFileId = '';
                 }
-                if (document.getElementById('mandatory-doc-preview').dataset.removed === 'true') {
-                    car.mandatoryInsurance.document = null;
+                if (mandatoryRemoved && car.mandatoryInsurance.fileId) {
+                    deleteFileFromDrive(car.mandatoryInsurance.fileId);
+                    car.mandatoryInsurance.fileId = '';
                 }
-                if (document.getElementById('comp-doc-preview').dataset.removed === 'true') {
-                    car.comprehensiveInsurance.document = null;
+                if (compRemoved && car.comprehensiveInsurance.fileId) {
+                    deleteFileFromDrive(car.comprehensiveInsurance.fileId);
+                    car.comprehensiveInsurance.fileId = '';
                 }
                 
                 car.name = document.getElementById('edit-name').value;
@@ -618,36 +637,51 @@
             }
         }
         
+        function uploadFileToDrive(file, callback) {
+            readFileAsBase64(file, function(base64) {
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'uploadFile',
+                        fileData: base64,
+                        fileName: file.name,
+                        mimeType: file.type
+                    })
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        callback(data.fileId);
+                    } else {
+                        alert('שגיאה בהעלאת הקובץ: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Upload error:', error);
+                    alert('שגיאה בהעלאת הקובץ');
+                });
+            });
+        }
+        
+        function deleteFileFromDrive(fileId) {
+            if (!fileId) return;
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'deleteFile',
+                    fileId: fileId
+                })
+            }).catch(function(error) {
+                console.error('Delete error:', error);
+            });
+        }
+        
         function readFileAsBase64(file, callback) {
             var reader = new FileReader();
             reader.onload = function(e) {
                 callback(e.target.result);
             };
             reader.readAsDataURL(file);
-        }
-        
-        function openDocument(base64Data) {
-            if (!base64Data) return;
-            
-            // Open in new window
-            var newWindow = window.open();
-            if (!newWindow) {
-                alert('אנא אפשר חלונות קופצים כדי לצפות במסמך');
-                return;
-            }
-            
-            // For images, display directly
-            if (base64Data.startsWith('data:image')) {
-                newWindow.document.write('<html><body style="margin:0;"><img src="' + base64Data + '" style="max-width:100%; height:auto;"></body></html>');
-            }
-            // For PDFs, embed
-            else if (base64Data.startsWith('data:application/pdf')) {
-                newWindow.document.write('<html><body style="margin:0; height:100%;"><embed src="' + base64Data + '" type="application/pdf" width="100%" height="100%"></body></html>');
-            }
-            // For other types, try to display
-            else {
-                newWindow.location.href = base64Data;
-            }
         }
 
         function enableNotifications() {
