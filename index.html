@@ -60,10 +60,18 @@
         
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(45, 52, 54, 0.8); z-index: 1000; padding: 20px; overflow-y: auto; }
         .modal.active { display: flex; align-items: center; justify-content: center; }
-        .modal-content { background: white; border-radius: 20px; padding: 28px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); position: relative; }
+        .modal-content { background: white; border-radius: 20px; padding: 0; max-width: 500px; width: 100%; max-height: 90vh; box-shadow: 0 10px 40px rgba(0,0,0,0.2); position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        .modal-header { font-size: 24px; font-weight: 600; color: #2d3436; padding: 24px 28px; border-bottom: 2px solid #e8ebed; position: sticky; top: 0; background: white; z-index: 10; border-radius: 20px 20px 0 0; }
+        .modal-body { padding: 0; overflow-y: auto; flex: 1; }
+        .modal-section { padding: 24px 28px; }
+        .modal-section:nth-child(odd) { background: #f8f9fa; }
+        .modal-section:nth-child(even) { background: white; }
+        .section-title { font-size: 16px; font-weight: 600; color: #74b9b9; margin-bottom: 16px; }
         
         @media (max-width: 600px) {
-            .modal-content { padding: 12px; max-width: calc(100vw - 20px); }
+            .modal-content { max-width: calc(100vw - 20px); }
+            .modal-header { font-size: 20px; padding: 16px 20px; }
+            .modal-section { padding: 16px 20px; }
             .modal { padding: 10px; }
             .form-input { font-size: 16px; } /* Prevents zoom on iOS */
             .form-input[type="date"] { 
@@ -75,9 +83,7 @@
                 -moz-appearance: none;
             }
             .form-group { margin-bottom: 12px; }
-            .modal-header { font-size: 20px; margin-bottom: 16px; }
         }
-        .modal-header { font-size: 24px; font-weight: 600; color: #2d3436; margin-bottom: 24px; }
         .modal-close { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 28px; color: #636e72; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
         .modal-close:hover { color: #2d3436; }
         .form-group { margin-bottom: 18px; }
@@ -89,10 +95,10 @@
         .form-input { width: 100%; padding: 10px; border: 2px solid #e8ebed; border-radius: 12px; font-size: 14px; direction: rtl; text-align: right; }
         .form-input[type="date"] { padding: 6px 4px; font-size: 13px; }
         .form-input:focus { outline: none; border-color: #74b9b9; }
-        .modal-buttons { display: flex; gap: 12px; margin-top: 28px; }
-        .btn-save { flex: 1; background: #74b9b9; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 28px; padding: 0 28px 28px 28px; }
+        .btn-save { flex: 1; background: #74b9b9; color: white; border: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
         .btn-save:hover { background: #5fa3a3; }
-        .btn-cancel { flex: 1; background: #dfe6e9; color: #2d3436; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .btn-cancel { flex: 1; background: #dfe6e9; color: #2d3436; border: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
         .btn-cancel:hover { background: #b2bec3; }
     </style>
 </head>
@@ -117,73 +123,95 @@
 
     <div class="modal" id="editModal" onclick="closeModalOnOutside(event)">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeEditModal()">✕</button>
-            <div class="modal-header">ערוך פרטי רכב</div>
-            <form id="editForm" onsubmit="saveEdit(event)">
-                <div class="form-group">
-                    <label class="form-label">שם הרכב</label>
-                    <input type="text" class="form-input" id="edit-name" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">שנה</label>
-                    <input type="text" class="form-input" id="edit-year" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">מספר רישוי</label>
-                    <input type="text" class="form-input" id="edit-license" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">טסט עד</label>
-                    <input type="date" class="form-input" id="edit-test" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">טסט - קישור למסמך</label>
-                    <input type="url" class="form-input" id="edit-test-doc" placeholder="הדבק קישור מ-Google Drive...">
-                    <small style="color: #636e72; font-size: 11px;">העלה קובץ ל-<a href="https://drive.google.com/drive/folders/1SJI8tQJCILbP-Vz6brd8pAd75QJOPZeO" target="_blank" style="color: #74b9b9;">תיקיית Drive</a> והדבק את הקישור כאן</small>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">ביטוח חובה - חברה</label>
-                    <input type="text" class="form-input" id="edit-mandatory-company" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">ביטוח חובה - תאריך</label>
-                    <input type="date" class="form-input" id="edit-mandatory-date" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">ביטוח חובה - קישור למסמך</label>
-                    <input type="url" class="form-input" id="edit-mandatory-doc" placeholder="הדבק קישור מ-Google Drive...">
-                    <small style="color: #636e72; font-size: 11px;">העלה קובץ ל-<a href="https://drive.google.com/drive/folders/1SJI8tQJCILbP-Vz6brd8pAd75QJOPZeO" target="_blank" style="color: #74b9b9;">תיקיית Drive</a> והדבק את הקישור כאן</small>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">סוג ביטוח (מקיף / צד ג')</label>
-                    <input type="text" class="form-input" id="edit-comp-type" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">ביטוח מקיף/צד ג' - חברה</label>
-                    <input type="text" class="form-input" id="edit-comp-company" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">ביטוח מקיף/צד ג' - תאריך</label>
-                    <input type="date" class="form-input" id="edit-comp-date" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">ביטוח מקיף/צד ג' - קישור למסמך</label>
-                    <input type="url" class="form-input" id="edit-comp-doc" placeholder="הדבק קישור מ-Google Drive...">
-                    <small style="color: #636e72; font-size: 11px;">העלה קובץ ל-<a href="https://drive.google.com/drive/folders/1SJI8tQJCILbP-Vz6brd8pAd75QJOPZeO" target="_blank" style="color: #74b9b9;">תיקיית Drive</a> והדבק את הקישור כאן</small>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">נהגים מורשים</label>
-                    <input type="text" class="form-input" id="edit-drivers" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">הערות</label>
-                    <input type="text" class="form-input" id="edit-notes">
-                </div>
-                <div class="modal-buttons">
-                    <button type="submit" class="btn-save">💾 שמור שינויים</button>
-                    <button type="button" class="btn-cancel" onclick="closeEditModal()">✖️ ביטול</button>
-                </div>
-            </form>
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeEditModal()">✕</button>
+                ערוך פרטי רכב
+            </div>
+            <div class="modal-body">
+                <form id="editForm" onsubmit="saveEdit(event)">
+                    <div class="modal-section">
+                        <div class="form-group">
+                            <label class="form-label">שם הרכב</label>
+                            <input type="text" class="form-input" id="edit-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">שנה</label>
+                            <input type="text" class="form-input" id="edit-year" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">מספר רישוי</label>
+                            <input type="text" class="form-input" id="edit-license" required>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <div class="section-title">טסט</div>
+                        <div class="form-group">
+                            <label class="form-label">בתוקף עד</label>
+                            <input type="date" class="form-input" id="edit-test" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">מסמך</label>
+                            <input type="url" class="form-input" id="edit-test-doc" placeholder="הדבק קישור מ-Google Drive...">
+                            <small style="color: #636e72; font-size: 11px;">העלה קובץ ל-<a href="https://drive.google.com/drive/folders/1SJI8tQJCILbP-Vz6brd8pAd75QJOPZeO" target="_blank" style="color: #74b9b9;">תיקיית Drive</a> והדבק את הקישור כאן</small>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <div class="section-title">ביטוח חובה</div>
+                        <div class="form-group">
+                            <label class="form-label">חברה</label>
+                            <input type="text" class="form-input" id="edit-mandatory-company" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">בתוקף עד</label>
+                            <input type="date" class="form-input" id="edit-mandatory-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">מסמך</label>
+                            <input type="url" class="form-input" id="edit-mandatory-doc" placeholder="הדבק קישור מ-Google Drive...">
+                            <small style="color: #636e72; font-size: 11px;">העלה קובץ ל-<a href="https://drive.google.com/drive/folders/1SJI8tQJCILbP-Vz6brd8pAd75QJOPZeO" target="_blank" style="color: #74b9b9;">תיקיית Drive</a> והדבק את הקישור כאן</small>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <div class="section-title">ביטוח מקיף / צד ג'</div>
+                        <div class="form-group">
+                            <label class="form-label">סוג ביטוח</label>
+                            <input type="text" class="form-input" id="edit-comp-type" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">חברה</label>
+                            <input type="text" class="form-input" id="edit-comp-company" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">בתוקף עד</label>
+                            <input type="date" class="form-input" id="edit-comp-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">מסמך</label>
+                            <input type="url" class="form-input" id="edit-comp-doc" placeholder="הדבק קישור מ-Google Drive...">
+                            <small style="color: #636e72; font-size: 11px;">העלה קובץ ל-<a href="https://drive.google.com/drive/folders/1SJI8tQJCILbP-Vz6brd8pAd75QJOPZeO" target="_blank" style="color: #74b9b9;">תיקיית Drive</a> והדבק את הקישור כאן</small>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-section">
+                        <div class="form-group">
+                            <label class="form-label">נהגים מורשים</label>
+                            <input type="text" class="form-input" id="edit-drivers" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">הערות</label>
+                            <input type="text" class="form-input" id="edit-notes">
+                        </div>
+                    </div>
+                    
+                    <div class="modal-buttons">
+                        <button type="submit" class="btn-save">💾 שמור שינויים</button>
+                        <button type="button" class="btn-cancel" onclick="closeEditModal()">✖️ ביטול</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
