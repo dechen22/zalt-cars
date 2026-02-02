@@ -54,6 +54,12 @@
         .notification-btn { background: #74b9b9; color: white; border: none; padding: 16px 24px; border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; box-shadow: 0 4px 15px rgba(116, 185, 185, 0.3); }
         .notification-btn:hover { background: #5fa3a3; }
         .notification-btn:disabled { background: #dfe6e9; cursor: not-allowed; box-shadow: none; }
+        
+        .add-car-btn { background: #74b9b9; color: white; border: none; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 20px; box-shadow: 0 2px 10px rgba(116, 185, 185, 0.2); display: inline-block; }
+        .add-car-btn:hover { background: #5fa3a3; }
+        
+        .delete-car-btn { background: #ff7675; color: white; border: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; flex: 1; }
+        .delete-car-btn:hover { background: #d63031; }
         .notification-status { text-align: center; margin-top: 12px; padding: 12px; background: white; border-radius: 12px; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .enabled { color: #00b894; }
         .disabled { color: #636e72; }
@@ -112,6 +118,10 @@
         
         <div id="alerts" class="alerts"></div>
         <div id="cars"></div>
+        
+        <button class="add-car-btn" onclick="addNewCar()">
+            ➕ הוסף רכב חדש
+        </button>
         
         <button class="notification-btn" id="enableNotifications" onclick="enableNotifications()">
             🔔 הפעל התראות בטלפון
@@ -207,8 +217,9 @@
                     </div>
                     
                     <div class="modal-buttons">
-                        <button type="submit" class="btn-save">💾 שמור שינויים</button>
+                        <button type="submit" class="btn-save">💾 שמור</button>
                         <button type="button" class="btn-cancel" onclick="closeEditModal()">✖️ ביטול</button>
+                        <button type="button" class="delete-car-btn" onclick="deleteCurrentCar()">🗑️ מחק רכב</button>
                     </div>
                 </form>
             </div>
@@ -531,6 +542,55 @@
             document.getElementById('editModal').classList.add('active');
         }
         
+        function addNewCar() {
+            currentEditIndex = -2; // Special flag for new car
+            
+            // Clear all fields for new car
+            document.getElementById('edit-name').value = "רכב חדש";
+            document.getElementById('edit-year').value = "2024";
+            document.getElementById('edit-license').value = "";
+            document.getElementById('edit-test').value = "2027-01-01";
+            document.getElementById('edit-test-doc').value = "";
+            document.getElementById('edit-mandatory-company').value = "";
+            document.getElementById('edit-mandatory-date').value = "2027-01-01";
+            document.getElementById('edit-mandatory-doc').value = "";
+            document.getElementById('edit-comp-type').value = "מקיף";
+            document.getElementById('edit-comp-company').value = "";
+            document.getElementById('edit-comp-date').value = "2027-01-01";
+            document.getElementById('edit-comp-doc').value = "";
+            document.getElementById('edit-drivers').value = "";
+            document.getElementById('edit-notes').value = "";
+            
+            document.getElementById('editModal').classList.add('active');
+        }
+        
+        function deleteCar(index) {
+            if (confirm('האם אתה בטוח שברצונך למחוק את ' + cars[index].name + '?')) {
+                cars.splice(index, 1);
+                saveToGoogleSheet();
+                renderAlerts();
+                renderCars();
+            }
+        }
+        
+        function deleteCurrentCar() {
+            if (currentEditIndex === -2) {
+                // Trying to delete a new car that hasn't been created yet
+                closeEditModal();
+                return;
+            }
+            
+            if (currentEditIndex === -1 || currentEditIndex >= cars.length) return;
+            
+            if (confirm('האם אתה בטוח שברצונך למחוק את ' + cars[currentEditIndex].name + '?')) {
+                cars.splice(currentEditIndex, 1);
+                closeEditModal();
+                saveToGoogleSheet();
+                renderAlerts();
+                renderCars();
+            }
+        }
+        
         function showExistingFile(previewId, fileId) {
             var preview = document.getElementById(previewId);
             if (fileId) {
@@ -564,28 +624,48 @@
         function saveEdit(event) {
             event.preventDefault();
             
-            if (currentEditIndex === -1) return;
+            console.log('Saving car, currentEditIndex:', currentEditIndex);
             
-            cars[currentEditIndex] = {
+            var testDate = document.getElementById('edit-test').value;
+            var mandatoryDate = document.getElementById('edit-mandatory-date').value;
+            var compDate = document.getElementById('edit-comp-date').value;
+            
+            console.log('Dates:', testDate, mandatoryDate, compDate);
+            
+            var carData = {
                 name: document.getElementById('edit-name').value,
                 year: document.getElementById('edit-year').value,
                 license: document.getElementById('edit-license').value,
-                test: toDisplayDate(document.getElementById('edit-test').value),
-                testFileId: document.getElementById('edit-test-doc').value,
+                test: testDate ? toDisplayDate(testDate) : '',
+                testFileId: document.getElementById('edit-test-doc').value || '',
                 mandatoryInsurance: {
                     company: document.getElementById('edit-mandatory-company').value,
-                    date: toDisplayDate(document.getElementById('edit-mandatory-date').value),
-                    fileId: document.getElementById('edit-mandatory-doc').value
+                    date: mandatoryDate ? toDisplayDate(mandatoryDate) : '',
+                    fileId: document.getElementById('edit-mandatory-doc').value || ''
                 },
                 comprehensiveInsurance: {
                     type: document.getElementById('edit-comp-type').value,
                     company: document.getElementById('edit-comp-company').value,
-                    date: toDisplayDate(document.getElementById('edit-comp-date').value),
-                    fileId: document.getElementById('edit-comp-doc').value
+                    date: compDate ? toDisplayDate(compDate) : '',
+                    fileId: document.getElementById('edit-comp-doc').value || ''
                 },
                 drivers: document.getElementById('edit-drivers').value,
                 notes: document.getElementById('edit-notes').value
             };
+            
+            console.log('Car data:', carData);
+            
+            if (currentEditIndex === -2) {
+                // Adding new car
+                console.log('Adding new car');
+                cars.push(carData);
+            } else if (currentEditIndex >= 0) {
+                // Editing existing car
+                console.log('Editing car at index', currentEditIndex);
+                cars[currentEditIndex] = carData;
+            }
+            
+            console.log('Total cars:', cars.length);
             
             saveToGoogleSheet();
             renderAlerts();
