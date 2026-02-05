@@ -395,6 +395,33 @@
             
             return String(dateValue);
         }
+        
+        function convertDriveLink(url) {
+            if (!url || url === '') return '';
+            
+            // Extract file ID from various Drive URL formats
+            var fileId = '';
+            
+            // Format: https://drive.google.com/file/d/FILE_ID/view
+            if (url.includes('drive.google.com/file/d/')) {
+                fileId = url.split('/file/d/')[1].split('/')[0];
+            }
+            // Format: https://drive.google.com/open?id=FILE_ID
+            else if (url.includes('drive.google.com/open?id=')) {
+                fileId = url.split('open?id=')[1].split('&')[0];
+            }
+            // Format: https://drive.google.com/uc?id=FILE_ID
+            else if (url.includes('drive.google.com/uc?id=')) {
+                fileId = url.split('uc?id=')[1].split('&')[0];
+            }
+            // Already in correct format or not a Drive link
+            else {
+                return url;
+            }
+            
+            // Return proper view URL
+            return 'https://drive.google.com/file/d/' + fileId + '/view';
+        }
 
         function toDateInput(dateStr) {
             if (!dateStr || typeof dateStr !== 'string') return '';
@@ -490,7 +517,7 @@
                 html += '<div class="info-grid">';
                 html += '<div class="info-item">';
                 if (car.testFileId) {
-                    html += '<div class="info-label"><a href="https://drive.google.com/file/d/' + car.testFileId + '/view" target="_blank" style="color: #74b9b9; text-decoration: underline;">טסט</a></div>';
+                    html += '<div class="info-label"><a href="' + convertDriveLink(car.testFileId) + '" target="_blank" style="color: #74b9b9; text-decoration: underline;">טסט</a></div>';
                 } else {
                     html += '<div class="info-label">טסט</div>';
                 }
@@ -500,7 +527,7 @@
                 
                 html += '<div class="info-item">';
                 if (car.mandatoryInsurance.fileId) {
-                    html += '<div class="info-label"><a href="https://drive.google.com/file/d/' + car.mandatoryInsurance.fileId + '/view" target="_blank" style="color: #74b9b9; text-decoration: underline;">ביטוח חובה</a></div>';
+                    html += '<div class="info-label"><a href="' + convertDriveLink(car.mandatoryInsurance.fileId) + '" target="_blank" style="color: #74b9b9; text-decoration: underline;">ביטוח חובה</a></div>';
                 } else {
                     html += '<div class="info-label">ביטוח חובה</div>';
                 }
@@ -511,7 +538,7 @@
                 
                 html += '<div class="info-item">';
                 if (car.comprehensiveInsurance.fileId) {
-                    html += '<div class="info-label"><a href="https://drive.google.com/file/d/' + car.comprehensiveInsurance.fileId + '/view" target="_blank" style="color: #74b9b9; text-decoration: underline;">' + car.comprehensiveInsurance.type + '</a></div>';
+                    html += '<div class="info-label"><a href="' + convertDriveLink(car.comprehensiveInsurance.fileId) + '" target="_blank" style="color: #74b9b9; text-decoration: underline;">' + car.comprehensiveInsurance.type + '</a></div>';
                 } else {
                     html += '<div class="info-label">' + car.comprehensiveInsurance.type + '</div>';
                 }
